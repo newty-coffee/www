@@ -61,6 +61,8 @@
   const HOME_DIR = home.pos.clone().sub(home.target);
   const BOX = [];
   for (const x of [-W / 2 - 16, W / 2 + 16]) for (const y of [0, 30]) for (const z of [-DEPTH / 2 - 2, DEPTH / 2 + 12]) BOX.push(new T.Vector3(x, y, z));
+  // Fog thins as the camera is framed further back (phones), so the land stays as bright as on a desktop.
+  const FOG_REF = 286, fogK = { value: 1 };
   function frameView() {
     const w = st.host.clientWidth, h = st.host.clientHeight;
     const panel = document.getElementById('panel').getBoundingClientRect();
@@ -84,6 +86,8 @@
       if (box[2] - box[0] <= R0 - L0 && box[3] - box[1] <= B0 - T0) break;
     }
     home.pos.copy(camera.position);
+    fogK.value = Math.min(1, FOG_REF / home.pos.distanceTo(home.target));
+    if (scene.fog) scene.fog.density = 0.0042 * fogK.value;
     controls.maxDistance = Math.max(420, home.pos.distanceTo(home.target) * 1.3);
     camera.setViewOffset(w, h, (box[0] + box[2] - L0 - R0) / 2, (box[1] + box[3] - T0 - B0) / 2, w, h);
     camera.position.copy(keep); camera.lookAt(controls.target); camera.updateMatrixWorld();
@@ -112,7 +116,7 @@
     uSetS: { value: settleTex(settleS) }, uSetP: { value: settleTex(settleP) },
     uStep: { value: 0 }, uSteps: { value: S }, uMix: { value: 0 }, uFin: { value: 0 },
     uH: { value: H }, uTime: { value: 0 }, uPlayX: { value: -W / 2 }, uSettleOn: { value: 1 },
-    uTexel: { value: new T.Vector2(1 / C, 1 / B) }, uBg: { value: new T.Color(EX.PALETTE.bg) },
+    uTexel: { value: new T.Vector2(1 / C, 1 / B) }, uBg: { value: new T.Color(EX.PALETTE.bg) }, uFog: fogK,
     uHoverZ: { value: -999 }, uLift: { value: 0 }, uGhostMix: { value: 1 }, uAlpha: { value: 1 },
   };
 
@@ -151,7 +155,7 @@
       gl_Position = projectionMatrix * mv;
     }`;
   const FRAG_COMMON = `
-    uniform float uTime, uPlayX, uSettleOn, uHoverZ, uAlpha; uniform vec3 uBg;
+    uniform float uTime, uPlayX, uSettleOn, uHoverZ, uAlpha, uFog; uniform vec3 uBg;
     varying float vH; varying float vFinH; varying float vSettle; varying vec3 vN; varying vec3 vW; varying float vDist;
     ${EX.GLSL_RAMP}
     float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
@@ -178,7 +182,7 @@
       col += vec3(1.0, 0.86, 1.0) * exp(-d * d * 1.6) * 1.35;
       col += base * exp(-abs(d) * 0.18) * 0.22 * step(d, 0.0);
       float hz = vW.z - uHoverZ; col += vec3(0.5, 0.7, 1.0) * exp(-hz * hz * 3.0) * 0.35;
-      float fog = 1.0 - exp(-pow(vDist * 0.0036, 2.0));
+      float fog = 1.0 - exp(-pow(vDist * 0.0036 * uFog, 2.0));
       return mix(col, uBg, fog);
     }`;
 
@@ -878,7 +882,8 @@
     renderPanel();
   }
   function setMode(m) { ui.mode = m; renderPanel(); }
-  function setPlayIcon() { $('play').textContent = ui.playing ? '❚❚' : '▶'; if (typeof drawGame === 'function') drawGame(); }
+  function setPlayIcon() { $('play').textContent = ui.playing ? '❚❚ Pause' : '▶ Listen to this step'; if (typeof drawGame === 'function') drawGame(); }
+  function setResolveLabel() { $('resolve').innerHTML = ui.animating ? '❚❚ Resolving' : '▶ Resolve <kbd>A</kbd>'; }
   function togglePlay() { if (ui.playing) audio.pause(); else audio.start(); setPlayIcon(); }
   $('play').onclick = togglePlay;
   // Resolve ties each step to a moment in the song (step × pace), so starting from any step plays from that
@@ -891,7 +896,7 @@
       audio.seek(ui.target * ui.pace);
       if (!ui.playing) { audio.start(); setPlayIcon(); }   // the process is something to hear, not only watch
     }
-    $('resolve').classList.toggle('on', ui.animating); drawGame();
+    $('resolve').classList.toggle('on', ui.animating); setResolveLabel(); drawGame();
   };
   $('slider').oninput = (e) => setStep(+e.target.value);
   document.querySelectorAll('#modes button').forEach((b) => (b.onclick = () => setMode(+b.dataset.mode)));
@@ -957,7 +962,7 @@
     if (ui.animating && ui.playing) {                   // the step follows the song; paused, it holds
       const want = Math.min(S, Math.floor(audio.time() / ui.pace + 1e-6));
       if (want !== ui.target) setStep(want, true);
-      if (want >= S) { ui.animating = false; $('resolve').classList.remove('on'); drawGame(); }
+      if (want >= S) { ui.animating = false; $('resolve').classList.remove('on'); setResolveLabel(); drawGame(); }
     }
     const k = reduced ? 1 : 1 - Math.exp(-dt * 7);
     ui.shown += (ui.target - ui.shown) * k; if (Math.abs(ui.target - ui.shown) < 1e-3) ui.shown = ui.target;

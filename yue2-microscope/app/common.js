@@ -250,7 +250,7 @@
     <a href="https://huggingface.co/m-a-p" target="_blank" rel="noopener">Multimodal Art Projection (m-a-p)</a> team:
     <a href="https://huggingface.co/m-a-p/YuE2-3B" target="_blank" rel="noopener">model</a>,
     <a href="https://github.com/multimodal-art-projection/YuE/blob/main/docs/technical_report.pdf" target="_blank" rel="noopener">technical report</a>.
-    This explorer is an independent project and not theirs
+    This explorer is an independent project by <a href="https://github.com/jeremy-boschen" target="_blank" rel="noopener">Jeremy Boschen</a>, built with Claude, and not theirs
     (<a href="https://github.com/jeremy-boschen/audiogen-yue2" target="_blank" rel="noopener">source</a>). It uses
     <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> for the 3D;
     <a href="https://github.com/facebookresearch/demucs" target="_blank" rel="noopener">Demucs</a> to estimate when parts come in;

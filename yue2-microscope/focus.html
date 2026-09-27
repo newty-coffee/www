@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="author" content="Jeremy Boschen">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Coming into focus · Microscope</title>
-<link rel="stylesheet" href="explore.css">
+<link rel="stylesheet" href="explore.css?v=e7abf7d7d0">
 </head>
 <body>
 <div class="stage" id="stage"><div class="vignette"></div></div>
@@ -30,8 +31,8 @@
       <div class="big" id="stepbig">0</div>
       <div class="sub" id="stepsub"></div>
       <div class="row" style="margin-top:10px">
-        <button class="btn round primary" id="play" data-help="<b>Play</b> the song as it sounds at this step. Leave it playing and change steps: the sound switches in place, so you hear exactly what one step changes. <kbd>space</kbd>">▶</button>
-        <button class="btn" id="resolve" data-help="<b>Resolve</b> plays the whole process for you: the song plays while the steps run from noise to finished, about one step every two seconds, so step 32 arrives just before the last chorus. This is a pace chosen for listening, not how long the model took. <kbd>A</kbd>">Resolve <kbd>A</kbd></button>
+        <button class="btn primary resolvebtn" id="resolve" data-help="<b>Resolve</b> plays the whole process for you: the song plays while the steps run from noise to finished, about one step every two seconds, so step 32 arrives just before the last chorus. This is a pace chosen for listening, not how long the model took. <kbd>A</kbd>">▶ Resolve <kbd>A</kbd></button>
+        <button class="btn listenbtn" id="play" data-help="<b>Listen to this step</b>: play the song as it sounds at the step on the dial. Leave it playing and change steps: the sound switches in place, so you hear exactly what one step changes. <kbd>space</kbd>">▶ Listen to this step</button>
       </div>
       <div class="sub" id="audiostatus" aria-live="polite"></div>
     </div>
@@ -76,9 +77,9 @@
 <div class="keys"><kbd>space</kbd>play · <kbd>←</kbd><kbd>→</kbd>step · <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd>view · <kbd>G</kbd>ghost · <kbd>C</kbd>color · <kbd>B</kbd>Hz bands ·
   <kbd>A</kbd>resolve · <kbd>,</kbd><kbd>.</kbd>seek 5 s · <kbd>R</kbd>reset camera · drag to orbit, scroll to zoom, click the land to seek</div>
 
-<script src="vendor/three/three.bundle.js"></script>
-<script src="data/focus.js"></script>
-<script src="app/common.js"></script>
-<script src="app/focus.js"></script>
+<script src="vendor/three/three.bundle.js?v=e32c26a4f9"></script>
+<script src="data/focus.js?v=770019197d"></script>
+<script src="app/common.js?v=59a9a25745"></script>
+<script src="app/focus.js?v=8b7b0c9ad6"></script>
 </body>
 </html>
