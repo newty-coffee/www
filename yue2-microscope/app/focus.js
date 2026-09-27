@@ -6,12 +6,14 @@
   EX.nav('focus');
   EX.help('focus', `
     <h2>Watching a song come into focus</h2>
-    <p><a href="https://github.com/multimodal-art-projection/YuE" target="_blank" rel="noopener">YuE2</a> is an open-weight AI music model: anyone can download it and run it. Its last stage makes the detailed sound: for this take it refines the whole song
-      together, starting from random noise, over 32 ${EX.g('step', 'steps')}, the way a photo develops. This page is one
-      real song, saved at every step.</p>
+    <p><a href="https://github.com/multimodal-art-projection/YuE" target="_blank" rel="noopener">YuE2</a> is an open-weight AI music model: anyone can download it and run it.
+      It uses lyrics, a style description and a musical score to build a compressed representation of a song. In its last
+      stage that representation starts as random values and is updated over 32 ${EX.g('step', 'steps')}. We decoded the
+      saved state at every step, so you can hear it and see its frequencies.</p>
     <p>The landscape is the sound, a ${EX.g('spectrogram', 'spectrogram')} in 3D. <b>Left to right</b> is time, <b>front to
-      back</b> is frequency (bass in front), <b>height</b> is level. Frost-teal glitter doesn't match the finished song yet;
-      color does.</p>
+      back</b> is frequency (bass in front), <b>height</b> is level. With comparison coloring on, warmer
+      color means a band's rise and fall across the song looks more like the final step's; frost teal means less alike.
+      It does not mean a sound is finished.</p>
     <p style="color:var(--muted)">Dotted words explain themselves when you point at them. The model's own description is in the
       <a href="https://github.com/multimodal-art-projection/YuE/blob/main/docs/technical_report.pdf" target="_blank" rel="noopener">YuE2 technical report</a>.</p>
     `, `
@@ -21,8 +23,9 @@
       you can see the steps where the song really comes through.</p>
     <p>The buttons show up around when a machine estimated each part comes in; your dots record where you tapped on this
       pass, not the earliest step a part could be heard.</p>
-    <p><b>State</b> is the song at this step, <b>Predicted</b> a one-jump guess at the end, <b>Finished</b> the end result.
-      Audio is volume-matched for listening and, on the web, compressed; the numbers come from the original audio.</p>
+    <p><b>State</b> is the song at this step, <b>Predicted</b> a quick estimate of the end made from it, <b>Finished</b> the
+      end result. Preview levels are adjusted for playback (each file to the same peak), so some steps may sound louder
+      than others; web audio is AAC. The numbers come from the original audio and latents.</p>
     `);
   document.getElementById('runlabel').innerHTML = `<b>${D.run}</b> · ${D.seconds.toFixed(0)} s · ${D.steps} steps`;
   if (EX.hdOn(D)) { D.audio = EX.hdSwap(D, D.audio); D.audio_bytes = D.hd.bytes; }
@@ -415,7 +418,8 @@
       }
     }
     // Everything is downloaded before anything plays, six at a time, then step 0 and the finished take are
-    // decoded, and only then do Play and Resolve come on. After that nothing waits on the network.
+    // decoded, and only then do Play and Resolve come on. After that nothing waits on the network, though a step can
+    // still take a moment to decode: the status under the buttons says so while it does.
     const TOTAL = D.audio_bytes || 0, MB = (n) => (n / 1e6).toFixed(0);
     let isReady = !compressed;
     function prepare() {
@@ -524,7 +528,7 @@
   // --- panel ---------------------------------------------------------------------------
   const $ = (id) => document.getElementById(id);
   const MODES = [EX.g('state', 'the state'), EX.g('predicted', 'the predicted final'), 'the finished song'];
-  $('honest').title = `Every number and color here is computed from the decoded audio of this take. ${D.bands_note}. Audio: ${D.audio_note}.`;
+  $('honest').title = `These are measurements of this take's saved latent states and decoded audio. ${D.bands_note}. Audio: ${D.audio_note}.`;
 
   // ring
   const ring = $('ring');
@@ -772,9 +776,9 @@
   const meanSettle = (arr, s) => { let t = 0; for (let b = 0; b < B; b++) t += arr[s * B + b]; return t / B / 255; };
   const METRICS = [
     ['Waveform match', '<b>Waveform match</b> compares the actual sound wave at this step with the finished song\'s, moment by moment. 1 means the shapes line up perfectly, which is not quite the same as identical; 0 means no straight-line relationship. It stays low until late, because tiny timing differences count against it even when the song already sounds right.<small class="tech">Pearson correlation of the samples with the final take\'s.</small>', (m) => m.correlation_final, (v) => v],
-    ['Latent match', '<b>Latent match</b> compares the model\'s own internal sketch of the song (its ' + EX.g('latent', 'latent') + ') with its final sketch. It climbs early: the sketch settles well before the sound itself comes clean.<small class="tech">Cosine similarity of the latent with the final latent.</small>', (m) => m.cosine_final, (v) => v],
+    ['Latent match', '<b>Latent match</b> compares the model\'s own internal sketch of the song (its ' + EX.g('latent', 'latent') + ') with its final sketch. Compare how this numerical similarity changes across the steps with how the waveform match changes.<small class="tech">Cosine similarity of the latent with the final latent.</small>', (m) => m.cosine_final, (v) => v],
     ['Band agreement', '<b>Band agreement</b> asks, for each frequency band, whether it gets louder and quieter at the same moments as the finished song, averaged over the bands. The map below shows it band by band.<small class="tech">Mean over bands of the envelope correlation with step 32\'s, negatives counted as 0.</small>', null, (v) => v],
-    ['Brightness Hz', '<b>Brightness</b> is the average frequency of the sound, weighted by how strong each frequency is. Noise is bright and hissy, so it starts high and drifts toward the song\'s own brightness as the noise clears.<small class="tech">Spectral centroid of the magnitude spectrum, Hz.</small>', (m) => m.spectral_centroid_hz, (v) => v / 5000],
+    ['Brightness Hz', '<b>Brightness</b> is the average frequency of the sound, weighted by how strong each frequency is. Follow how it moves across the steps; it is not a direct measure of how much noise is left.<small class="tech">Spectral centroid of the magnitude spectrum, Hz.</small>', (m) => m.spectral_centroid_hz, (v) => v / 5000],
   ];
   const metricEls = METRICS.map(([name, sub]) => {
     const d = document.createElement('div'); d.className = 'metric';
@@ -799,7 +803,8 @@
     const other = setName === 'state' ? 'predicted' : 'state';
     $('stepbig').innerHTML = `step ${s}`;
     $('ringnum').textContent = s;
-    const blurb = ui.mode === 2 || s === S ? 'the finished song, step 32' : s === 0 ? 'the starting noise' : `${Math.round(s / S * 100)}% of the steps done`;
+    const blurb = ui.mode === 2 || s === S ? 'the finished song, step 32'
+      : s === 0 ? (ui.mode === 1 ? 'prediction from the initial state' : 'the starting noise') : `${Math.round(s / S * 100)}% of the steps done`;
     $('stepsub').innerHTML = `${blurb}<br>showing <b style="color:#ffc2e3">${MODES[ui.mode]}</b>${m.t != null ? ` · ${EX.g('t', 't')} ${m.t.toFixed(2)}` : ''}`;
     $('arc').setAttribute('d', s ? arcPath(s) : '');
     const [kx, ky] = pt(ang(s), R); $('knob').setAttribute('cx', kx); $('knob').setAttribute('cy', ky);
@@ -959,6 +964,10 @@
   // --- frame loop ---------------------------------------------------------------------
   let intro = reduced ? 1 : 0;
   st.onFrame((dt, now) => {
+    // The dial moves at once, but a step's audio can take a moment to decode: say which step is still sounding.
+    const want = Math.round(ui.target), heard = audio.loadedStep;
+    const sw = !ui.playing || heard === want ? '' : heard < 0 ? `Loading step ${want}…` : `Loading step ${want} · still hearing step ${heard}`;
+    if ($('switchstatus').textContent !== sw) $('switchstatus').textContent = sw;
     if (ui.animating && ui.playing) {                   // the step follows the song; paused, it holds
       const want = Math.min(S, Math.floor(audio.time() / ui.pace + 1e-6));
       if (want !== ui.target) setStep(want, true);

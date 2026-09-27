@@ -305,7 +305,7 @@
     predicted: ['Predicted final', 'A quick guess at the finished song, made by jumping from this step straight to the end. Later steps can end up somewhere else.',
       'x̂₀ = x_t − t·v, decoded. With z_t = (1−t)z₀ + tε and v = ε − z₀ (report Eq. 6) this is exact for the true velocity; the model\'s estimate makes it a guess.'],
     t: ['t', 'The solver\'s clock: 1 at the start, 0 at the end. It is not a measure of how much noise you can hear.', 'The flow-matching time, 1 → 0 across the 32 steps.'],
-    settling: ['Settling wall', 'One bar per frequency band. A bar grows as that band\'s level rises and falls over the song in the same pattern as the finished song.',
+    settling: ['Settling wall', 'One bar per frequency band. A bar grows as that band\'s rise and fall across the song looks more like the final step\'s. It does not mean the band is finished.',
       'Whole-song correlation of each band\'s level envelope with step 32\'s. It compares patterns, not exact levels.'],
     nps: ['Notes per syllable', 'Written notes per estimated syllable, per phrase. About 1 is one note per syllable; higher means more notes than syllables. It says nothing about how long a syllable is held.',
       'Score note onsets ÷ a heuristic syllable count of the lyric line; pickup notes folded into a phrase are not counted.'],

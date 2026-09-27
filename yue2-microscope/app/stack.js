@@ -6,10 +6,13 @@
   EX.nav('stack');
   EX.help('stack', `
     <h2>Four layers of one song</h2>
-    <p>This is an exploration of how <a href="https://github.com/multimodal-art-projection/YuE" target="_blank" rel="noopener">YuE2</a>, an open-weight AI music model that anyone can download and run, generates a song. Everything here comes from one real
-      generation, saved as it ran. One network of about 3.6 billion parameters does all of it: it writes the score and the
-      tokens one after another, then refines the whole sound at once (<a href="https://github.com/multimodal-art-projection/YuE/blob/main/docs/technical_report.pdf" target="_blank" rel="noopener">technical
-      report</a>).</p>
+    <p>This is an exploration of how <a href="https://github.com/multimodal-art-projection/YuE" target="_blank" rel="noopener">YuE2</a>, an open-weight AI music model that anyone can download and run, generates a song. The floors are the saved results of one real
+      generation. One network of about 3.6 billion parameters writes the score, the tokens and the sketch, reading the lyrics
+      and style description all the way; a separately trained decoder makes the audio
+      (<a href="https://github.com/multimodal-art-projection/YuE/blob/main/docs/technical_report.pdf" target="_blank" rel="noopener">technical
+      report</a>, section 2).</p>
+    <p>The replay (<kbd>P</kbd>) is a sped-up illustration, not a recording: token progress is estimated between recorded
+      checkpoints, and the last stage is animated.</p>
     <p>Before any sound exists, the model writes the song down in layers, each made from the one above it. This page stacks
       them like the floors of a building, all on one timeline: <b>left to right is time</b>.</p>
     <dl>
@@ -27,7 +30,8 @@
     `, `
     <h3 style="margin-top:0">What to do</h3>
     <p>Hover anywhere to light the same moment through all four floors and read its lyric. Click to hear that phrase.
-      Press <kbd>P</kbd> for a sped-up replay of how the song was generated.</p>
+      Press <kbd>P</kbd> for a sped-up illustration of the stages: token progress estimated from recorded checkpoints, the last
+      stage animated.</p>
     <p style="color:var(--muted)">Drag to turn the view, scroll to zoom. Press <kbd>?</kbd> to bring this back.</p>`);
   document.getElementById('runlabel').innerHTML = `<b>${D.run}</b> · audio ${D.seconds.toFixed(0)} s · score ${D.score.seconds.toFixed(0)} s (score time)`;
   D.audio = EX.hdSwap(D, D.audio);
@@ -417,7 +421,9 @@
       frontier.visible = true; frontier.position.set(xOf(tokens / D.semantic.rate), Y.semantic + 3, 0);
       phase = `${reused ? `The ${EX.g('score', 'score')} was reused from an earlier take. ` : ''}Drafting the sound as ${EX.g('tokens', 'tokens')}: ${tokens} of ${ids.length}, ${(tokens / D.semantic.rate).toFixed(0)} s of music so far.`;
     } else { frontier.visible = false; phase = `Then the ${EX.g('latent', 'latent')} is refined from noise and decoded to audio. Illustrated here, not recorded; the real steps are on <a href="focus.html">Coming into focus</a>.`; }
-    $('clock').textContent = done ? `tokens finished at ${fmt(semEnd)}${planEnd ? `, the score at ${fmt(planEnd)}` : ''}` : `${fmt(g)} into generation`;
+    $('clock').textContent = done ? `tokens finished at ${fmt(semEnd)}${planEnd ? `, the score at ${fmt(planEnd)}` : ''}`
+      : g > semEnd ? 'acoustic stage · timing not recorded here'
+      : `≈ ${fmt(g)} into generation`;                   // estimated between recorded checkpoints
     $('phase').innerHTML = phase;
     $('gen').value = Math.round(g / GEN_END * 1000);
     $('replay').textContent = replaying ? '❚❚' : '▶';

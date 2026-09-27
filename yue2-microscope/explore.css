@@ -380,6 +380,7 @@ dfn[data-g] { font-style: inherit; text-decoration: underline dotted rgba(201, 1
 
 /* Resolve is the way in, so it is the primary button; Listen to this step is for exploring one step on your own. */
 .stepinfo .row { flex-wrap: wrap; gap: 8px; }
+.sub.switching { color: #ffc2e3; min-height: 0; }
 .resolvebtn { padding: 10px 18px; border-radius: 999px; font-weight: 700; font-size: 14px; gap: 8px; }
 .resolvebtn kbd { background: rgba(10, 15, 28, .18); border-color: rgba(10, 15, 28, .25); color: #0a0f1c; }
 .resolvebtn.on { box-shadow: 0 0 0 2px #fff, 0 0 26px rgba(255, 95, 180, .55); }

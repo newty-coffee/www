@@ -5,7 +5,7 @@
 <meta name="author" content="Jeremy Boschen">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The stack · Microscope</title>
-<link rel="stylesheet" href="explore.css?v=e7abf7d7d0">
+<link rel="stylesheet" href="explore.css?v=93ab53a86f">
 </head>
 <body>
 <div class="stage" id="stage"><div class="vignette"></div></div>
@@ -13,9 +13,10 @@
 <div class="hero">
   <div class="kicker">Generation microscope · one song, four layers</div>
   <h1>The stack</h1>
-  <p>Before there is any sound, the model writes the song down in layers, each built from the one above: a
-     <dfn data-g="score">score</dfn>, a rough draft in <dfn data-g="tokens">tokens</dfn>, a detailed
-     <dfn data-g="latent">sketch</dfn>, then the audio. Hover to light one moment through every layer; click to hear it.</p>
+  <p>Using the lyrics and a style description all the way through, the model writes a
+     <dfn data-g="score">score</dfn>, then a rough draft in <dfn data-g="tokens">tokens</dfn>, then a detailed
+     <dfn data-g="latent">sketch</dfn> of the sound; a separate decoder turns the sketch into audio. Each floor is one of
+     those, saved from one real take. Hover to light one moment through every floor; click to hear it.</p>
 </div>
 
 <aside class="panel right" id="panel">
@@ -45,7 +46,7 @@
 
 <script src="vendor/three/three.bundle.js?v=e32c26a4f9"></script>
 <script src="data/stack.js?v=8dee066da8"></script>
-<script src="app/common.js?v=59a9a25745"></script>
-<script src="app/stack.js?v=5f790e683e"></script>
+<script src="app/common.js?v=df22f5d0e7"></script>
+<script src="app/stack.js?v=19cdbc9d32"></script>
 </body>
 </html>
