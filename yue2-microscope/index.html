@@ -5,7 +5,7 @@
 <meta name="author" content="Jeremy Boschen">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Microscope · explore</title>
-<link rel="stylesheet" href="explore.css?v=93ab53a86f">
+<link rel="stylesheet" href="explore.css?v=3cd689c4ef">
 <style>
   html, body { overflow: visible; height: auto; min-height: 100%; }   /* the document scrolls, not a box inside it */
   body { background: radial-gradient(90% 70% at 70% 0%, #1c1740 0%, #0a0f1c 60%) fixed, #0a0f1c; min-height: 100%; }
@@ -37,16 +37,16 @@
     <div class="hero" style="position:static"><div class="kicker">An exploration of how YuE2 generates songs</div></div>
     <h1>Watch a song being made</h1>
     <p>Two interactive 3D views of one song, <b>Slow Down</b>, as YuE2, an open-weight AI music model, makes it: the sound
-       resolving from noise, and the four layers the model writes, on one time axis. The pages show the saved
-       states of one real generation; the stack's replay is an illustration. Audio previews are peak-normalized and compressed for the web. Drag to orbit, scroll to zoom,
+       resolving from noise, and the song in four forms from plan to sound, on one time axis. The pages show the saved
+       states of one real generation; the plan-to-sound replay is an illustration. Audio previews are peak-normalized and compressed for the web. Drag to orbit, scroll to zoom,
        and every view plays the audio it shows.</p>
   </div>
   <div class="grid">
     <a class="card" href="focus.html"><canvas data-art="focus"></canvas><div class="body"><div class="num">01 · the headline</div>
       <h2>Coming into focus</h2><p>The song drawn as a landscape of sound at each of the 32 steps the model takes from random noise
       to the finished take. Move through the steps while it plays, and hear a quick estimate of where it is heading.</p><div class="facts" id="f-focus"></div></div></a>
-    <a class="card" href="stack.html"><canvas data-art="stack"></canvas><div class="body"><div class="num">02 · the hierarchy</div>
-      <h2>The stack</h2><p>The four layers the model writes, as floors of one building: the score it plans, a sketch of the sound,
+    <a class="card" href="stack.html"><canvas data-art="stack"></canvas><div class="body"><div class="num">02 · plan to sound</div>
+      <h2>From plan to sound</h2><p>One song in four forms, read top to bottom: the score it plans, a rough draft of the sound,
       the detailed sound, and the audio. Light one moment through all of them, hear the phrase, read its lyric, and watch a
       sped-up illustration of the stages.</p><div class="facts" id="f-stack"></div></div></a>
   </div>

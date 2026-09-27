@@ -1,20 +1,20 @@
-/* "The stack": score, semantic tokens, acoustic latent and audio on one time axis. */
+/* "From plan to sound" (stack.html): score, semantic tokens, acoustic latent and audio on one time axis. */
 (function () {
   'use strict';
   const { T, reduced, decode, fmt, num, rampJS, css } = EX;
   const D = window.STACK;
   EX.nav('stack');
   EX.help('stack', `
-    <h2>Four layers of one song</h2>
-    <p>This is an exploration of how <a href="https://github.com/multimodal-art-projection/YuE" target="_blank" rel="noopener">YuE2</a>, an open-weight AI music model that anyone can download and run, generates a song. The floors are the saved results of one real
+    <h2>From plan to sound</h2>
+    <p>This is an exploration of how <a href="https://github.com/multimodal-art-projection/YuE" target="_blank" rel="noopener">YuE2</a>, an open-weight AI music model that anyone can download and run, generates a song. The rows are the saved results of one real
       generation. One network of about 3.6 billion parameters writes the score, the tokens and the sketch, reading the lyrics
       and style description all the way; a separately trained decoder makes the audio
       (<a href="https://github.com/multimodal-art-projection/YuE/blob/main/docs/technical_report.pdf" target="_blank" rel="noopener">technical
       report</a>, section 2).</p>
     <p>The replay (<kbd>P</kbd>) is a sped-up illustration, not a recording: token progress is estimated between recorded
       checkpoints, and the last stage is animated.</p>
-    <p>Before any sound exists, the model writes the song down in layers, each made from the one above it. This page stacks
-      them like the floors of a building, all on one timeline: <b>left to right is time</b>.</p>
+    <p>Read it from top to bottom: each row is the same song in a different form, from the plan to the audio you hear, all
+      on one timeline: <b>left to right is time</b>.</p>
     <dl>
       <dt>Score</dt><dd>The plan: melody, chords and sections, written as sheet music in text. The lyrics are given
         separately. The model normally writes this first; this take reused a score written earlier.</dd>
@@ -29,7 +29,7 @@
       speech recognizer picked out of the finished song there. It can differ from the lyrics, and it can mishear.</p>
     `, `
     <h3 style="margin-top:0">What to do</h3>
-    <p>Hover anywhere to light the same moment through all four floors and read its lyric. Click to hear that phrase.
+    <p>Hover anywhere to light the same moment through all four rows and read its lyric. Click to hear that phrase.
       Press <kbd>P</kbd> for a sped-up illustration of the stages: token progress estimated from recorded checkpoints, the last
       stage animated.</p>
     <p style="color:var(--muted)">Drag to turn the view, scroll to zoom. Press <kbd>?</kbd> to bring this back.</p>`);
