@@ -6,8 +6,10 @@
   EX.nav('stack');
   EX.help('stack', `
     <h2>Four layers of one song</h2>
-    <p>This is an exploration of how YuE2, an open-weight AI music model that anyone can download and run, generates a song. Everything here comes from one real
-      generation, saved as it ran.</p>
+    <p>This is an exploration of how <a href="https://github.com/multimodal-art-projection/YuE" target="_blank" rel="noopener">YuE2</a>, an open-weight AI music model that anyone can download and run, generates a song. Everything here comes from one real
+      generation, saved as it ran. One network of about 3.6 billion parameters does all of it: it writes the score and the
+      tokens one after another, then refines the whole sound at once (<a href="https://github.com/multimodal-art-projection/YuE/blob/main/docs/technical_report.pdf" target="_blank" rel="noopener">technical
+      report</a>).</p>
     <p>Before any sound exists, the model writes the song down in layers, each made from the one above it. This page stacks
       them like the floors of a building, all on one timeline: <b>left to right is time</b>.</p>
     <dl>
@@ -29,7 +31,7 @@
     <p style="color:var(--muted)">Drag to turn the view, scroll to zoom. Press <kbd>?</kbd> to bring this back.</p>`);
   document.getElementById('runlabel').innerHTML = `<b>${D.run}</b> · audio ${D.seconds.toFixed(0)} s · score ${D.score.seconds.toFixed(0)} s (score time)`;
   D.audio = EX.hdSwap(D, D.audio);
-  EX.hdToggle(D);
+  EX.hdToggle(D); EX.download(D);
   const $ = (id) => document.getElementById(id);
 
   const TMAX = Math.max(D.seconds, D.score.seconds);

@@ -199,7 +199,9 @@
     const tabs = [['focus.html', 'Coming into focus', 'F'], ['stack.html', 'The stack', 'S']];
     top.innerHTML = `<a class="brand" href="index.html"><span class="mark"></span><span><b>Microscope</b><small>YuE2 · explore</small></span></a>
       <nav class="tabs">${tabs.map(([h, t, k]) => `<a href="${h}" class="${h.startsWith(active) ? 'on' : ''}">${t}</a>`).join('')}</nav>
-      <div class="run" id="runlabel"></div>`;
+      <div class="run" id="runlabel"></div>
+      <a class="ghlink" href="https://github.com/jeremy-boschen/audiogen-yue2" target="_blank" rel="noopener" title="Source code on GitHub" aria-label="Source code on GitHub">
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>`;
     document.body.prepend(top);
     return top;
   }
@@ -243,12 +245,25 @@
   // "How to read this": plain words for people who have never seen a diffusion model. It opens by
   // itself the first time a page is visited (remembered per page) and from the ? in the top bar.
   // Two panels side by side: what you are looking at, then what to press.
+  // Whose work this is. YuE2 and every tool below belong to their authors; this explorer only runs them on one take.
+  const CREDITS = `<p class="credits"><a href="https://github.com/multimodal-art-projection/YuE" target="_blank" rel="noopener">YuE2</a> is made by the
+    <a href="https://huggingface.co/m-a-p" target="_blank" rel="noopener">Multimodal Art Projection (m-a-p)</a> team:
+    <a href="https://huggingface.co/m-a-p/YuE2-3B" target="_blank" rel="noopener">model</a>,
+    <a href="https://github.com/multimodal-art-projection/YuE/blob/main/docs/technical_report.pdf" target="_blank" rel="noopener">technical report</a>.
+    This explorer is an independent project and not theirs
+    (<a href="https://github.com/jeremy-boschen/audiogen-yue2" target="_blank" rel="noopener">source</a>). It uses
+    <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> for the 3D;
+    <a href="https://github.com/facebookresearch/demucs" target="_blank" rel="noopener">Demucs</a> to estimate when parts come in;
+    <a href="https://github.com/chrisdonahue/sheetsage" target="_blank" rel="noopener">SheetSage</a> for chords;
+    and <a href="https://huggingface.co/Qwen/Qwen3-ASR-1.7B" target="_blank" rel="noopener">Qwen3-ASR</a> and the
+    <a href="https://huggingface.co/Qwen/Qwen3-ForcedAligner-0.6B" target="_blank" rel="noopener">Qwen3 forced aligner</a>, run through
+    <a href="https://github.com/0xShug0/audio.cpp" target="_blank" rel="noopener">audio.cpp</a>, for the recognized words.</p>`;
   function help(key, about, controls) {
     const card = document.createElement('div');
     card.className = 'helpcard';
     card.setAttribute('role', 'dialog');
     card.setAttribute('aria-label', 'How to read this page');
-    card.innerHTML = `<section class="helppanel">${about}</section>
+    card.innerHTML = `<section class="helppanel">${about}${CREDITS}</section>
       <section class="helppanel"><button class="btn helpclose" aria-label="Close">✕</button>${controls}
         <div class="row" style="margin-top:16px"><button class="btn primary helpgo">Got it</button></div></section>`;
     document.body.appendChild(card);
@@ -272,23 +287,23 @@
   // plain meaning first and one line for the technically minded under it. The text stays short; the depth is a hover away.
   const GLOSSARY = {
     step: ['A step', 'The model refines the whole song in 32 small passes, starting from random noise. Each pass is a step; the dial counts the starting noise as step 0.',
-      'Flow matching: 32 midpoint steps along an ODE from t = 1 to t = 0, two network evaluations each.'],
+      'Flow matching: 32 midpoint ODE steps from t = 1 to t = 0, two network evaluations each (YuE2 technical report, appendix).'],
     ode: ['ODE', 'The recipe the model follows from noise to song: at every step it estimates which way the sound should move, and moves it a little.',
       'Ordinary differential equation. The network predicts a velocity v; this take uses the midpoint method, which checks v halfway through each step. Simplest form: x ← x − Δt·v.'],
     latent: ['Latent', 'The model\'s own compressed sketch of the sound. You can\'t listen to it directly; a decoder turns it into audio.',
       'Continuous VAE latent: 64 channels (not frequency bands) at 25 frames a second, decoded to 48 kHz audio.'],
     decoder: ['Decoder', 'Turns the model\'s sketch of the sound (the latent) into audio you can hear.', 'VAE decoder, latent → waveform.'],
     tokens: ['Semantic tokens', 'A rough draft of the sound as a string of codes, 25 a second, that steers the detailed sound made next. A storyboard before filming. The codes are labels, not amounts.',
-      'Discrete categorical codes sampled autoregressively by the language model; they condition the acoustic stage.'],
+      'MERT2 codes from a 32,768-entry codebook, sampled autoregressively; they condition the acoustic stage (YuE2 technical report).'],
     score: ['Score', 'The plan, written as sheet music in text: notes, chords and sections. The lyrics are given separately. The model normally writes it first; this take reused one written earlier.',
-      'ABC notation from the language model; this run loaded it from a saved take.'],
+      'ABC notation, sampled with the model\'s ordinary text tokens and no grammar constraints; this run loaded it from a saved take.'],
     scoretime: ['Score time', 'Time as the sheet music counts it. The recording usually follows it closely, but it can drift.',
       'Seconds from the ABC score\'s tempo, not measured from the audio.'],
     spectrogram: ['Spectrogram', 'A picture of sound: time runs along it, low to high frequency runs across it, and more energy is taller or brighter.',
       'Summed STFT power in log-spaced bands, on a log scale.'],
     state: ['State', 'The song as it is at this step, leftover noise and all.', 'x_t, the saved latent at this step, decoded.'],
     predicted: ['Predicted final', 'A quick guess at the finished song, made by jumping from this step straight to the end. Later steps can end up somewhere else.',
-      'x̂₀ = x_t − t·v: the current velocity extrapolated to t = 0, decoded.'],
+      'x̂₀ = x_t − t·v, decoded. With z_t = (1−t)z₀ + tε and v = ε − z₀ (report Eq. 6) this is exact for the true velocity; the model\'s estimate makes it a guess.'],
     t: ['t', 'The solver\'s clock: 1 at the start, 0 at the end. It is not a measure of how much noise you can hear.', 'The flow-matching time, 1 → 0 across the 32 steps.'],
     settling: ['Settling wall', 'One bar per frequency band. A bar grows as that band\'s level rises and falls over the song in the same pattern as the finished song.',
       'Whole-song correlation of each band\'s level envelope with step 32\'s. It compares patterns, not exact levels.'],
@@ -323,11 +338,21 @@
     if (!D.hd) return;
     const run = document.getElementById('runlabel'), on = hdOn(D);
     const b = document.createElement('button');
-    b.className = `hdtoggle${on ? ' on' : ''}`; b.textContent = 'HD audio';
+    b.className = `hdtoggle${on ? ' on' : ''}`; b.innerHTML = 'HD<span class="long"> audio</span>';
     b.title = on ? `Playing HD audio (${D.hd.rate}). Click for standard (${D.hd.standard_rate}), a smaller download. Reloads the page.`
       : `Switch to HD audio (${D.hd.rate}), a bigger download. Reloads the page.`;
     b.onclick = () => { try { localStorage.setItem(HD_KEY, on ? '0' : '1'); } catch (e) { /* private mode */ } location.reload(); };
     run.appendChild(b);
   }
-  window.EX = { hdOn, hdSwap, hdToggle, g, GLOSSARY, T, reduced, DPR, PALETTE, GLSL_RAMP, rampJS, css, decode, fmt, num, stage, labels, dust, floor, nav, tip, spark, help };
+  // Web build: the finished song at HD quality, as a file download (publish writes D.download).
+  function download(D) {
+    if (!D.download) return;
+    const a = document.createElement('a');
+    a.className = 'ghlink'; a.href = D.download.url; a.download = D.download.file;
+    a.title = `Download the song (${D.download.file}, AAC ${D.download.rate}, ${(D.download.bytes / 1e6).toFixed(1)} MB)`;
+    a.setAttribute('aria-label', a.title);
+    a.innerHTML = '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M8 2v8M4.5 6.8 8 10.3l3.5-3.5M2.5 13.5h11"/></svg>';
+    document.querySelector('.top').appendChild(a);
+  }
+  window.EX = { download, hdOn, hdSwap, hdToggle, g, GLOSSARY, T, reduced, DPR, PALETTE, GLSL_RAMP, rampJS, css, decode, fmt, num, stage, labels, dust, floor, nav, tip, spark, help };
 })();

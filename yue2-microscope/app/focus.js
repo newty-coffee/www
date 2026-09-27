@@ -6,13 +6,14 @@
   EX.nav('focus');
   EX.help('focus', `
     <h2>Watching a song come into focus</h2>
-    <p>YuE2 is an open-weight AI music model: anyone can download it and run it. Its last stage makes the detailed sound: for this take it refines the whole song
+    <p><a href="https://github.com/multimodal-art-projection/YuE" target="_blank" rel="noopener">YuE2</a> is an open-weight AI music model: anyone can download it and run it. Its last stage makes the detailed sound: for this take it refines the whole song
       together, starting from random noise, over 32 ${EX.g('step', 'steps')}, the way a photo develops. This page is one
       real song, saved at every step.</p>
     <p>The landscape is the sound, a ${EX.g('spectrogram', 'spectrogram')} in 3D. <b>Left to right</b> is time, <b>front to
       back</b> is frequency (bass in front), <b>height</b> is level. Frost-teal glitter doesn't match the finished song yet;
       color does.</p>
-    <p style="color:var(--muted)">Dotted words explain themselves when you point at them.</p>
+    <p style="color:var(--muted)">Dotted words explain themselves when you point at them. The model's own description is in the
+      <a href="https://github.com/multimodal-art-projection/YuE/blob/main/docs/technical_report.pdf" target="_blank" rel="noopener">YuE2 technical report</a>.</p>
     `, `
     <h3 style="margin-top:0">Try it</h3>
     <p>Press <b>Resolve</b> and listen to the song come out of the noise. Tap <b>I hear…</b> the moment you hear a voice,
@@ -25,7 +26,7 @@
     `);
   document.getElementById('runlabel').innerHTML = `<b>${D.run}</b> · ${D.seconds.toFixed(0)} s · ${D.steps} steps`;
   if (EX.hdOn(D)) { D.audio = EX.hdSwap(D, D.audio); D.audio_bytes = D.hd.bytes; }
-  EX.hdToggle(D);
+  EX.hdToggle(D); EX.download(D);
 
   const C = D.columns, B = D.bands, S = D.steps, NS = S + 1;
   const W = 150, DEPTH = 78, H = 17;      // deep enough that the Hz bands spread out
