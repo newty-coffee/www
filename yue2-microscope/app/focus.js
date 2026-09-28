@@ -214,7 +214,10 @@
   const terrain = new T.Mesh(geo, terrainMat);
   scene.add(terrain);
 
-  // Ghost: the counterpart (predicted over state, state over predicted) as glowing contour lines per band.
+  // Ghost: the counterpart (predicted over state, state over predicted) as contour lines per band, drawn on the
+  // land itself rather than lifted above it. Each line glows by how far it stands from the surface under it, so
+  // where the two views agree it sinks into the land and vanishes, and at the last step, where they are the same
+  // song, it is gone. A lifted copy never lined up with the land under perspective, so its shapes misled.
   const lineIdx = [];
   for (let b = 0; b < B; b += 2) for (let c = 0; c < C - 1; c++) lineIdx.push(b * C + c, b * C + c + 1);
   const ghostGeo = new T.BufferGeometry();
@@ -222,11 +225,17 @@
   ghostGeo.setAttribute('aUV', geo.getAttribute('aUV'));
   ghostGeo.setIndex(lineIdx);
   ghostGeo.boundingSphere = geo.boundingSphere;
-  const ghostUniforms = Object.assign({}, uniforms, { uLift: { value: 7 }, uGhostMix: { value: 1 }, uAlpha: { value: 0.5 }, uFin: { value: 0 } });
+  const ghostUniforms = Object.assign({}, uniforms, { uLift: { value: 0.04 }, uGhostMix: { value: 1 }, uAlpha: { value: 0.5 }, uFin: { value: 0 }, uLandFin: uniforms.uFin });
   const ghost = new T.LineSegments(ghostGeo, new T.ShaderMaterial({
     uniforms: ghostUniforms, transparent: true, depthWrite: false, blending: T.AdditiveBlending,
-    vertexShader: VERT_COMMON + `void main(){ terrain(uGhostMix); }`,
-    fragmentShader: FRAG_COMMON + `void main(){ vec3 c = shade(true); gl_FragColor = vec4(c * 0.9 + vec3(0.08,0.05,0.14), uAlpha * (0.35 + vH * 0.9)); }`,
+    vertexShader: VERT_COMMON + `uniform float uLandFin; varying float vGap;
+      void main(){
+        terrain(uGhostMix);
+        float land = mix(hAt(aUV, uMix), texture(uState, vec3(aUV, uSteps)).r, uLandFin);
+        vGap = abs(shape(hAt(aUV, uGhostMix)) - shape(land));
+      }`,
+    fragmentShader: FRAG_COMMON + `varying float vGap;
+      void main(){ vec3 c = shade(true); gl_FragColor = vec4(c * 0.9 + vec3(0.08,0.05,0.14), uAlpha * smoothstep(0.08, 0.9, vGap) * (0.5 + vH * 0.9)); }`,
   }));
   scene.add(ghost);
 
@@ -256,8 +265,13 @@
 
   // Settling wall: one bar per band at the left edge, height = envelope correlation at this step.
   const wallGeo = new T.BoxGeometry(1, 1, 1); wallGeo.translate(0, 0.5, 0);
-  const wall = new T.InstancedMesh(wallGeo, new T.MeshBasicMaterial({ toneMapped: false }), B);
-  scene.add(wall);
+  // Semi-transparent so the land shows through it, like one pane of tinted glass. Seen at an angle the bars
+  // stack dozens of faces deep, and half-opacity compounded that many times is opaque, so a depth-only pass
+  // draws first and the colored pass then paints only the nearest face of each bar, once.
+  const wall = new T.InstancedMesh(wallGeo, new T.MeshBasicMaterial({ toneMapped: false, transparent: true, opacity: 0.5, depthWrite: false }), B);
+  const wallDepth = new T.InstancedMesh(wallGeo, new T.MeshBasicMaterial({ colorWrite: false, transparent: true }), B);
+  wallDepth.instanceMatrix = wall.instanceMatrix; wallDepth.renderOrder = 1; wall.renderOrder = 2;
+  scene.add(wallDepth, wall);
   const wallX = -W / 2 - 6, m4 = new T.Matrix4(), col = new T.Color();
   const bandGap = DEPTH / B * 0.8;
 
@@ -696,7 +710,7 @@
     }
     let svg = '';
     laid.forEach((g) => {
-      const top = Math.max(floor - g.gh, g.jy + 22);
+      const top = Math.min(g.jy + 36, floor - g.gh);    // a short lead just under its marks, never down into the buttons
       g.el.style.transform = `translate(${g.x.toFixed(1)}px, ${top.toFixed(1)}px)`;
       const rows = [...g.el.children];
       g.cl.forEach((p, r) => {                      // each part's own line, ending at its own row's dot
@@ -761,15 +775,30 @@
   $('markbtn').hidden = !LOCAL;
   $('markbtn').onclick = () => { marking = !marking; $('markbtn').classList.toggle('on', marking); drawMarker(); };
 
-  // Hover help: the panel's controls describe themselves in the space at its foot, not in tooltips.
+  // Hover help: the panel's controls describe themselves at its foot, not in tooltips. The foot holds one idle line;
+  // the explanation is a card laid over the panel, so a long one never makes the panel scroll. It opens where the
+  // idle line is when there is room below, rises from the panel's bottom edge when there is not, and moves to the
+  // top if that would cover the thing being explained.
   const HELP_IDLE = 'Point at anything in this panel and it is explained here.';
-  const hh = $('hoverhelp');
+  const hh = $('hoverhelp'), card = $('helpcardfloat'), panel = $('panel');
   hh.innerHTML = HELP_IDLE;
-  $('panel').addEventListener('pointerover', (e) => {
-    if (e.target.closest('#hoverhelp')) return;
-    const el = e.target.closest('[data-help]'); hh.innerHTML = el ? el.dataset.help : HELP_IDLE; hh.classList.toggle('on', !!el);
+  const hideHelp = () => card.classList.remove('on');
+  panel.addEventListener('pointerover', (e) => {
+    const el = e.target.closest('[data-help]');
+    if (!el) { hideHelp(); return; }
+    card.innerHTML = el.dataset.help;
+    // Laid exactly over the panel's contents, whichever layout the window has put the panel in.
+    const box = panel.getBoundingClientRect(), cs = getComputedStyle(panel), foot = hh.getBoundingClientRect();
+    const padT = parseFloat(cs.paddingTop), padB = parseFloat(cs.paddingBottom);
+    card.style.left = `${foot.left}px`; card.style.width = `${foot.width}px`;
+    const at = el.getBoundingClientRect(), height = card.offsetHeight, first = box.top + panel.clientTop + padT;
+    let top = Math.min(foot.top, box.top + panel.clientTop + panel.clientHeight - padB - height);
+    if (at.bottom > top && at.top < top + height) top = first;
+    card.style.top = `${Math.max(first, top)}px`;
+    card.classList.add('on');
   });
-  $('panel').addEventListener('pointerleave', () => { hh.innerHTML = HELP_IDLE; hh.classList.remove('on'); });
+  panel.addEventListener('pointerleave', hideHelp);
+  panel.addEventListener('scroll', hideHelp, { passive: true });
 
   // metrics
   const series = (set, fn) => D.metrics.map((m) => fn(m[set] || {}));
@@ -989,7 +1018,7 @@
     blockEdges.material.opacity = blockMat.opacity * 4; block.visible = blockMat.opacity > 0.004;
     uniforms.uTime.value = reduced ? 0 : now;
     ghostUniforms.uGhostMix.value = ui.mode === 1 ? 0 : 1;
-    ghostUniforms.uAlpha.value += ((ui.ghost ? 0.3 : 0) - ghostUniforms.uAlpha.value) * k;
+    ghostUniforms.uAlpha.value += ((ui.ghost ? 0.6 : 0) - ghostUniforms.uAlpha.value) * k;
     ghost.visible = ghostUniforms.uAlpha.value > 0.01;
 
     audio.tick();
